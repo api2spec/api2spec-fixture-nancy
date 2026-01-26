@@ -1,35 +1,44 @@
-using Nancy;
-using Nancy.ModelBinding;
+using Carter;
 
 namespace Api.Modules;
 
 public record User(int Id, string Name, string Email);
 
-public class UserModule : NancyModule
+public class UserModule : ICarterModule
 {
-    public UserModule() : base("/users")
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-        Get("/", _ => Response.AsJson(new[] {
+        app.MapGet("/users", () => Results.Ok(new[] {
             new User(1, "Alice", "alice@example.com"),
             new User(2, "Bob", "bob@example.com")
         }));
 
-        Get("/{id:int}", args => Response.AsJson(new User((int)args.id, "Sample User", "user@example.com")));
-
-        Post("/", _ => {
-            var user = this.Bind<User>();
-            return Response.AsJson(user with { Id = 1 }).WithStatusCode(HttpStatusCode.Created);
+        app.MapGet("/users/{id:int}", (int id) =>
+        {
+            if (id > 100) return Results.NotFound();
+            return Results.Ok(new User(id, "Sample User", "user@example.com"));
         });
 
-        Put("/{id:int}", args => {
-            var user = this.Bind<User>();
-            return Response.AsJson(user with { Id = (int)args.id });
+        app.MapPost("/users", (User user) => Results.Created($"/users/{1}", user with { Id = 1 }));
+
+        app.MapPut("/users/{id:int}", (int id, User user) =>
+        {
+            if (id > 100) return Results.NotFound();
+            return Results.Ok(user with { Id = id });
         });
 
-        Delete("/{id:int}", _ => HttpStatusCode.NoContent);
+        app.MapDelete("/users/{id:int}", (int id) =>
+        {
+            if (id > 100) return Results.NotFound();
+            return Results.NoContent();
+        });
 
-        Get("/{userId:int}/posts", args => Response.AsJson(new[] {
-            new { id = 1, userId = (int)args.userId, title = "User Post", body = "Content" }
-        }));
+        app.MapGet("/users/{userId:int}/posts", (int userId) =>
+        {
+            if (userId > 100) return Results.NotFound();
+            return Results.Ok(new[] {
+                new { id = 1, userId = userId, title = "User Post", body = "Content" }
+            });
+        });
     }
 }

@@ -1,24 +1,36 @@
-using Nancy;
-using Nancy.ModelBinding;
+using Carter;
 
 namespace Api.Modules;
 
 public record Post(int Id, int UserId, string Title, string Body);
 
-public class PostModule : NancyModule
+public class PostModule : ICarterModule
 {
-    public PostModule() : base("/posts")
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-        Get("/", _ => Response.AsJson(new[] {
+        app.MapGet("/posts", () => Results.Ok(new[] {
             new Post(1, 1, "First Post", "Hello world"),
             new Post(2, 1, "Second Post", "Another post")
         }));
 
-        Get("/{id:int}", args => Response.AsJson(new Post((int)args.id, 1, "Sample Post", "Post body")));
+        app.MapGet("/posts/{id:int}", (int id) =>
+        {
+            if (id > 100) return Results.NotFound();
+            return Results.Ok(new Post(id, 1, "Sample Post", "Post body"));
+        });
 
-        Post("/", _ => {
-            var post = this.Bind<Post>();
-            return Response.AsJson(post with { Id = 1 }).WithStatusCode(HttpStatusCode.Created);
+        app.MapPost("/posts", (Post post) => Results.Created($"/posts/{1}", post with { Id = 1 }));
+
+        app.MapPut("/posts/{id:int}", (int id, Post post) =>
+        {
+            if (id > 100) return Results.NotFound();
+            return Results.Ok(post with { Id = id });
+        });
+
+        app.MapDelete("/posts/{id:int}", (int id) =>
+        {
+            if (id > 100) return Results.NotFound();
+            return Results.NoContent();
         });
     }
 }

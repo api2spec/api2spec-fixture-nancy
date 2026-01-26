@@ -1,12 +1,12 @@
-using Nancy;
+using Carter;
 
 namespace Api.Modules;
 
-public class HealthModule : NancyModule
+public class HealthModule : ICarterModule
 {
-    public HealthModule()
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-        Get("/health", _ => Response.AsJson(new { status = "ok", version = "0.1.0" }));
-        Get("/health/ready", _ => Response.AsJson(new { status = "ready", version = "0.1.0" }));
+        app.MapGet("/health", () => Results.Ok(new { status = "ok", version = "0.1.0" }));
+        app.MapGet("/health/ready", () => Results.Ok(new { status = "ready", version = "0.1.0" }));
     }
 }

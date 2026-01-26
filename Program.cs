@@ -1,7 +1,9 @@
-using Nancy.Owin;
+using Carter;
 
 var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
+builder.Services.AddCarter();
 
-app.UseOwin(x => x.UseNancy());
+var app = builder.Build();
+app.MapCarter();
+
 app.Run("http://0.0.0.0:8080");
